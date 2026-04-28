@@ -20,7 +20,6 @@ function SubjectCard({ subject, onTimeUpdate, onDelete }) {
   const tick = useCallback(() => {
     setSessionSecs(prev => {
       const next = prev + 1
-      // Save to DB every 5 seconds
       if (next - lastSaveRef.current >= 5) {
         const toSave = next - lastSaveRef.current
         lastSaveRef.current = next
@@ -33,7 +32,6 @@ function SubjectCard({ subject, onTimeUpdate, onDelete }) {
   const toggle = () => {
     if (running) {
       clearInterval(intervalRef.current)
-      // Save remaining unsaved seconds
       const unsaved = sessionSecs - lastSaveRef.current
       if (unsaved > 0) {
         api.updateTime(subject.id, unsaved).then(onTimeUpdate)
@@ -46,7 +44,6 @@ function SubjectCard({ subject, onTimeUpdate, onDelete }) {
     }
   }
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       clearInterval(intervalRef.current)
@@ -80,7 +77,6 @@ function SubjectCard({ subject, onTimeUpdate, onDelete }) {
         >×</button>
       </div>
 
-      {/* Total time */}
       <div>
         <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Total studied</div>
         <div style={{ fontSize: '1.5rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: 'var(--text)' }}>
@@ -88,7 +84,6 @@ function SubjectCard({ subject, onTimeUpdate, onDelete }) {
         </div>
       </div>
 
-      {/* Session time */}
       {(running || sessionSecs > 0) && (
         <div>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.08em' }}>This session</div>
@@ -98,7 +93,6 @@ function SubjectCard({ subject, onTimeUpdate, onDelete }) {
         </div>
       )}
 
-      {/* Start / Pause button */}
       <button
         onClick={toggle}
         style={{
@@ -153,7 +147,36 @@ export default function App() {
   const totalAll = subjects.reduce((sum, s) => sum + s.total_seconds, 0)
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px' }}>
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: '56px 24px 40px' }}>
+
+      {/* Custom title bar */}
+      <div style={{
+        WebkitAppRegion: 'drag',
+        height: '40px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 16px',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        background: '#0d0d0f',
+      }}>
+        <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>Study Tracker</span>
+        <div style={{ display: 'flex', gap: '8px', WebkitAppRegion: 'no-drag' }}>
+          <button onClick={() => window.api.minimize()} style={{
+            width: 12, height: 12, borderRadius: '50%',
+            background: '#f5a623', border: 'none', cursor: 'pointer',
+          }} />
+          <button onClick={() => window.api.close()} style={{
+            width: 12, height: 12, borderRadius: '50%',
+            background: '#ff5f57', border: 'none', cursor: 'pointer',
+          }} />
+        </div>
+      </div>
+
       {/* Header */}
       <div style={{ marginBottom: 40 }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.03em' }}>

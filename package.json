@@ -11,7 +11,8 @@
     "appId": "com.you.studytracker",
     "productName": "Study Tracker",
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "assets/favicon.ico"
     },
     "files": [
       "dist/**/*",
@@ -23,7 +24,7 @@
     }
   },
   "dependencies": {
-    "better-sqlite3": "^9.4.3",
+    "electron-store": "^8.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

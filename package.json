@@ -1,33 +1,38 @@
 {
   "name": "study-tracker",
   "version": "1.0.0",
-  "description": "Use for tracking personal study record . Motivate you and understand how you long you been study for a sepcific area",
-  "main": "vite.config.js",
+  "main": "electron/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "build": "vite build && electron-builder",
+    "preview": "vite preview"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/YYXaustin/study-tracker.git"
+  "build": {
+    "appId": "com.you.studytracker",
+    "productName": "Study Tracker",
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    }
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/YYXaustin/study-tracker/issues"
-  },
-  "homepage": "https://github.com/YYXaustin/study-tracker#readme",
   "dependencies": {
-    "better-sqlite3": "^12.9.0",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "better-sqlite3": "^9.4.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^6.0.1",
-    "concurrently": "^9.2.1",
-    "electron": "^41.3.0",
-    "electron-builder": "^26.8.1",
-    "vite": "^8.0.10",
-    "wait-on": "^9.0.5"
+    "@vitejs/plugin-react": "^4.2.1",
+    "concurrently": "^8.2.2",
+    "electron": "^29.1.4",
+    "electron-builder": "^24.13.3",
+    "vite": "^5.1.6",
+    "wait-on": "^7.2.0"
   }
 }

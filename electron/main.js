@@ -2,66 +2,83 @@ const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
 const Store = require('electron-store')
 
-
 const isDev = !app.isPackaged
-
 const store = new Store()
 
-// Helpers
-function getSubjects() {
-  return store.get('subjects', [])
+function getSubjects() { return store.get('subjects', []) }
+function saveSubjects(s) { store.set('subjects', s) }
+
+function findById(subjects, id) {
+  return subjects.find(s => String(s.id) === String(id))
 }
-function saveSubjects(subjects) {
-  store.set('subjects', subjects)
-}
 
-// IPC handlers
-ipcMain.handle('get-subjects', () => {
-  return getSubjects()
-})
+ipcMain.handle('get-subjects', () => getSubjects())
+ipcMain.handle('minimize', () => BrowserWindow.getFocusedWindow()?.minimize())
+ipcMain.handle('close',    () => BrowserWindow.getFocusedWindow()?.close())
 
-ipcMain.handle('minimize', () => {
-  BrowserWindow.getFocusedWindow().minimize()
-})
-ipcMain.handle('close', () => {
-  BrowserWindow.getFocusedWindow().close()
-})
-
-ipcMain.handle('add-subject', (_, name) => {
+ipcMain.handle('add-subject', (_, name, description = '', createdAt = null) => {
   const subjects = getSubjects()
-  const newSubject = {
+  const subject = {
     id: Date.now(),
     name,
+    description,
+    createdAt: createdAt || new Date().toISOString(),
     total_seconds: 0,
-    created_at: new Date().toISOString(),
+    sessions: [],
   }
-  subjects.unshift(newSubject)
+  subjects.unshift(subject)
   saveSubjects(subjects)
-  return newSubject
+  return subject
 })
 
 ipcMain.handle('update-time', (_, { id, seconds }) => {
   const subjects = getSubjects()
-  const subject = subjects.find(s => s.id === id)
-  if (subject) {
-    subject.total_seconds += seconds
-    saveSubjects(subjects)
-    return subject
+  const subject = findById(subjects, id)
+  if (!subject) return null
+  subject.total_seconds += seconds
+  if (!Array.isArray(subject.sessions)) subject.sessions = []
+  saveSubjects(subjects)
+  return subject
+})
+
+ipcMain.handle('add-session', (_, { id, session }) => {
+  const subjects = getSubjects()
+  const subject = findById(subjects, id)
+  if (!subject) {
+    console.error('[add-session] subject not found for id:', id, 'type:', typeof id)
+    return null
   }
+  if (!Array.isArray(subject.sessions)) subject.sessions = []
+  subject.sessions.push(session)
+  saveSubjects(subjects)
+  console.log('[add-session] saved session for:', subject.name, '| total sessions:', subject.sessions.length)
+  return subject
+})
+
+ipcMain.handle('update-subject', (_, { id, updates }) => {
+  const subjects = getSubjects()
+  const subject = findById(subjects, id)
+  if (!subject) return null
+  if (updates.name        != null) subject.name        = updates.name
+  if (updates.description != null) subject.description = updates.description
+  if (updates.createdAt   != null) subject.createdAt   = updates.createdAt
+  if (updates.sessions    != null) subject.sessions    = updates.sessions
+  saveSubjects(subjects)
+  return subject
 })
 
 ipcMain.handle('delete-subject', (_, id) => {
-  const subjects = getSubjects().filter(s => s.id !== id)
-  saveSubjects(subjects)
+  saveSubjects(getSubjects().filter(s => String(s.id) !== String(id)))
   return { success: true }
 })
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1000,
-    height: 700,
-    minWidth: 700,
-    minHeight: 500,
+    width: 1280,
+    height: 820,
+    minWidth: 900,
+    minHeight: 600,
+    center: true,
     frame: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -74,8 +91,9 @@ function createWindow() {
   if (isDev) {
     win.loadURL('http://localhost:5173')
   } else {
-  win.loadFile(path.join(__dirname, '../dist/index.html'))
-}
+    win.loadFile(path.join(__dirname, '../dist/index.html'))
+  }
+
 }
 
 app.whenReady().then(createWindow)
